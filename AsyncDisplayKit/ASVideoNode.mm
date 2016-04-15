@@ -54,6 +54,7 @@
 {
 	_previewQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
   _progressQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+  _shouldObserveInterfaceStateChanges = YES;
   
   self.playButton = [[ASDefaultPlayButton alloc] init];
   self.gravity = AVLayerVideoGravityResizeAspect;
@@ -203,7 +204,7 @@
 
   if (!nowVisible) {
     if (wasVisible) {
-      if (_shouldBePlaying) {
+      if (_shouldBePlaying && _shouldObserveInterfaceStateChanges) {
         [self pause];
         _shouldBePlaying = YES;
       }

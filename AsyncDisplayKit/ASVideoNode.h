@@ -30,6 +30,7 @@
 // If it leaves the visible interfaceState it will pause but will resume once it has returned
 @property (nonatomic, assign, readwrite) BOOL shouldAutoplay;
 @property (nonatomic, assign, readwrite) BOOL shouldAutorepeat;
+@property (nonatomic, assign, readwrite) BOOL shouldObserveInterfaceStateChanges;
 
 @property (nonatomic, assign, readwrite) BOOL muted;
 
