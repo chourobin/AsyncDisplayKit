@@ -132,6 +132,8 @@
   } else if (_asset) {
     [self setPlaceholderImagefromAsset:_asset];
   }
+  
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
 }
 
 - (void)layout
@@ -505,6 +507,11 @@
   return (_player.rate > 0 && !_player.error);
 }
 
+- (void)didEnterBackground:(NSNotification *)notification
+{
+  [self pause];
+}
+
 
 #pragma mark - Playback observers
 
@@ -576,6 +583,8 @@
 
 - (void)dealloc
 {
+  [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
+  
   if (_periodicTimeObserver) {
     [_player removeTimeObserver:_periodicTimeObserver];
     _periodicTimeObserver = nil;
