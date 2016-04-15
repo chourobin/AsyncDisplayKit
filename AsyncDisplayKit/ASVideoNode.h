@@ -7,6 +7,7 @@
  */
 
 #import <AsyncDisplayKit/ASButtonNode.h>
+#import <CoreMedia/CoreMedia.h>
 
 @class AVAsset, AVPlayer, AVPlayerItem;
 @protocol ASVideoNodeDelegate;
@@ -50,5 +51,6 @@
 @optional
 - (void)videoPlaybackDidFinish:(ASVideoNode *)videoNode;
 - (void)videoNodeWasTapped:(ASVideoNode *)videoNode;
+- (void)videoNodeDidUpdateProgressWithCurrentTime:(CMTime)time duration:(CMTime)duration;
 @end
 

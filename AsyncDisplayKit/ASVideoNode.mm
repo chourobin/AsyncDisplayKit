@@ -36,6 +36,9 @@
   NSString *_gravity;
   
   dispatch_queue_t _previewQueue;
+  dispatch_queue_t _progressQueue;
+  
+  id _periodicTimeObserver;
 }
 
 @end
@@ -50,6 +53,7 @@
 - (instancetype)init
 {
 	_previewQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+  _progressQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
   
   self.playButton = [[ASDefaultPlayButton alloc] init];
   self.gravity = AVLayerVideoGravityResizeAspect;
@@ -72,6 +76,15 @@
       [self constructCurrentPlayerItemFromInitData];
       _player = [AVPlayer playerWithPlayerItem:_currentPlayerItem];
       _player.muted = _muted;
+      
+      __weak __typeof__(self) weakSelf = self;
+      _periodicTimeObserver = [self.player addPeriodicTimeObserverForInterval:CMTimeMake(1, 15) queue:_progressQueue usingBlock:^(CMTime time) {
+        __typeof__(self) strongSelf = weakSelf;
+        if ([strongSelf.delegate respondsToSelector:@selector(videoNodeDidUpdateProgressWithCurrentTime:duration:)]) {
+          CMTime duration = [strongSelf.player.currentItem duration];
+          [strongSelf.delegate videoNodeDidUpdateProgressWithCurrentTime:time duration:duration];
+        }
+      }];
     }
     playerLayer.player = _player;
     playerLayer.videoGravity = [self gravity];
@@ -265,6 +278,15 @@
     } else {
       _player = [[AVPlayer alloc] initWithPlayerItem:_currentPlayerItem];
       _player.muted = _muted;
+      
+      __weak __typeof__(self) weakSelf = self;
+      _periodicTimeObserver = [self.player addPeriodicTimeObserverForInterval:CMTimeMake(1, 15) queue:_progressQueue usingBlock:^(CMTime time) {
+        __typeof__(self) strongSelf = weakSelf;
+        if ([strongSelf.delegate respondsToSelector:@selector(videoNodeDidUpdateProgressWithCurrentTime:duration:)]) {
+          CMTime duration = [strongSelf.player.currentItem duration];
+          [strongSelf.delegate videoNodeDidUpdateProgressWithCurrentTime:time duration:duration];
+        }
+      }];
     }
   }
 }
@@ -297,6 +319,15 @@
         [self constructCurrentPlayerItemFromInitData];
         _player = [AVPlayer playerWithPlayerItem:_currentPlayerItem];
         _player.muted = _muted;
+        
+        __weak __typeof__(self) weakSelf = self;
+        _periodicTimeObserver = [self.player addPeriodicTimeObserverForInterval:CMTimeMake(1, 15) queue:_progressQueue usingBlock:^(CMTime time) {
+          __typeof__(self) strongSelf = weakSelf;
+          if ([strongSelf.delegate respondsToSelector:@selector(videoNodeDidUpdateProgressWithCurrentTime:duration:)]) {
+            CMTime duration = [strongSelf.player.currentItem duration];
+            [strongSelf.delegate videoNodeDidUpdateProgressWithCurrentTime:time duration:duration];
+          }
+        }];
       }
       ((AVPlayerLayer *)_playerNode.layer).player = _player;
     }
@@ -544,6 +575,11 @@
 
 - (void)dealloc
 {
+  if (_periodicTimeObserver) {
+    [_player removeTimeObserver:_periodicTimeObserver];
+    _periodicTimeObserver = nil;
+  }
+  
   [self removePlayerItemObservers];
   
   @try {
