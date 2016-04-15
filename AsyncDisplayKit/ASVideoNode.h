@@ -43,7 +43,7 @@
 
 - (void)play;
 - (void)pause;
-
+- (void)stopLoader;
 - (BOOL)isPlaying;
 
 @end

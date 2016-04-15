@@ -294,6 +294,12 @@
   }
 }
 
+- (void)stopLoader
+{
+  [(UIActivityIndicatorView *)_spinner.view stopAnimating];
+  [_spinner removeFromSupernode];
+}
+
 - (void)clearFetchedData
 {
   [super clearFetchedData];
@@ -302,6 +308,7 @@
     ASDN::MutexLocker l(_videoLock);
     ((AVPlayerLayer *)_playerNode.layer).player = nil;
     _player = nil;
+    _placeholderImageNode.image = nil;
   }
 }
 
