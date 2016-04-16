@@ -294,10 +294,14 @@
   }
 }
 
+- (void)startLoader
+{
+  [(UIActivityIndicatorView *)_spinner.view startAnimating];
+}
+
 - (void)stopLoader
 {
   [(UIActivityIndicatorView *)_spinner.view stopAnimating];
-  [_spinner removeFromSupernode];
 }
 
 - (void)clearFetchedData
@@ -461,6 +465,7 @@
   if (!_spinner) {
     _spinner = [[ASDisplayNode alloc] initWithViewBlock:^UIView *{
       UIActivityIndicatorView *spinnnerView = [[UIActivityIndicatorView alloc] init];
+      spinnnerView.hidesWhenStopped = YES;
       spinnnerView.color = [UIColor whiteColor];
       
       return spinnnerView;
