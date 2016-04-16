@@ -301,7 +301,11 @@
 
 - (void)stopLoader
 {
-  [(UIActivityIndicatorView *)_spinner.view stopAnimating];
+  if (_spinner) {
+    [(UIActivityIndicatorView *)_spinner.view stopAnimating];
+    [_spinner removeFromSupernode];
+    _spinner = nil;
+  }
 }
 
 - (void)clearFetchedData
