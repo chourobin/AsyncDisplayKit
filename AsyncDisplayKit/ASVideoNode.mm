@@ -9,6 +9,10 @@
 #import "ASVideoNode.h"
 #import "ASDefaultPlayButton.h"
 
+static void *ASVideoNodeContext = &ASVideoNodeContext;
+static NSString * const kPlaybackLikelyToKeepUpKey = @"playbackLikelyToKeepUp";
+static NSString * const kStatus = @"status";
+
 @interface ASVideoNode ()
 {
   ASDN::RecursiveMutex _videoLock;
@@ -110,6 +114,7 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didPlayToEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:_currentPlayerItem];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(errorWhilePlaying:) name:AVPlayerItemFailedToPlayToEndTimeNotification object:_currentPlayerItem];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(errorWhilePlaying:) name:AVPlayerItemNewErrorLogEntryNotification object:_currentPlayerItem];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willResignActive:) name:UIApplicationWillResignActiveNotification object:nil];
   }
 }
 
@@ -119,6 +124,7 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemDidPlayToEndTimeNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemFailedToPlayToEndTimeNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemNewErrorLogEntryNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
   }
 }
 
@@ -132,8 +138,6 @@
   } else if (_asset) {
     [self setPlaceholderImagefromAsset:_asset];
   }
-  
-  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willResignActive:) name:UIApplicationWillResignActiveNotification object:nil];
 }
 
 - (void)layout
@@ -224,29 +228,59 @@
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-  if (object == _currentPlayerItem && [keyPath isEqualToString:@"status"]) {
-    if (_currentPlayerItem.status == AVPlayerItemStatusReadyToPlay) {
-      if ([self.subnodes containsObject:_spinner]) {
-        [_spinner removeFromSupernode];
-        _spinner = nil;
+  if (context == ASVideoNodeContext) {
+    if ([keyPath isEqualToString:kPlaybackLikelyToKeepUpKey]) {
+      if (_shouldBePlaying) {
+        [self play]; // autoresume after buffer catches up
       }
-      
-      // If we don't yet have a placeholder image update it now that we should have data available for it
-      if (!_placeholderImageNode) {
-        if (_currentPlayerItem &&
-            _currentPlayerItem.tracks.count > 0 &&
-            _currentPlayerItem.tracks[0].assetTrack &&
-            _currentPlayerItem.tracks[0].assetTrack.asset) {
-          _asset = _currentPlayerItem.tracks[0].assetTrack.asset;
-          [self setPlaceholderImagefromAsset:_asset];
-          [self setNeedsLayout];
+    } else if ([keyPath isEqualToString:kStatus]) {
+      NSInteger statusValue = [change[@"new"] integerValue];
+      if (statusValue == AVPlayerItemStatusReadyToPlay) {
+        if ([self.subnodes containsObject:_spinner]) {
+          [_spinner removeFromSupernode];
+          _spinner = nil;
+        }
+        
+        // If we don't yet have a placeholder image update it now that we should have data available for it
+        if (!_placeholderImageNode) {
+          if (_currentPlayerItem &&
+              _currentPlayerItem.tracks.count > 0 &&
+              _currentPlayerItem.tracks[0].assetTrack &&
+              _currentPlayerItem.tracks[0].assetTrack.asset) {
+            _asset = _currentPlayerItem.tracks[0].assetTrack.asset;
+            [self setPlaceholderImagefromAsset:_asset];
+            [self setNeedsLayout];
+          }
         }
       }
-			
-    } else if (_currentPlayerItem.status == AVPlayerItemStatusFailed) {
-      
+    } else {
+      [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
   }
+  
+//  if (object == _currentPlayerItem && [keyPath isEqualToString:@"status"]) {
+//    if (_currentPlayerItem.status == AVPlayerItemStatusReadyToPlay) {
+//      if ([self.subnodes containsObject:_spinner]) {
+//        [_spinner removeFromSupernode];
+//        _spinner = nil;
+//      }
+//      
+//      // If we don't yet have a placeholder image update it now that we should have data available for it
+//      if (!_placeholderImageNode) {
+//        if (_currentPlayerItem &&
+//            _currentPlayerItem.tracks.count > 0 &&
+//            _currentPlayerItem.tracks[0].assetTrack &&
+//            _currentPlayerItem.tracks[0].assetTrack.asset) {
+//          _asset = _currentPlayerItem.tracks[0].assetTrack.asset;
+//          [self setPlaceholderImagefromAsset:_asset];
+//          [self setNeedsLayout];
+//        }
+//      }
+//			
+//    } else if (_currentPlayerItem.status == AVPlayerItemStatusFailed) {
+//      
+//    }
+//  }
 }
 
 - (void)tapped
@@ -267,7 +301,8 @@
   [super fetchData];
   
   @try {
-    [_currentPlayerItem removeObserver:self forKeyPath:NSStringFromSelector(@selector(status))];
+    [_currentPlayerItem removeObserver:self forKeyPath:kStatus];
+    [_currentPlayerItem removeObserver:self forKeyPath:kPlaybackLikelyToKeepUpKey];
   }
   @catch (NSException * __unused exception) {
     NSLog(@"unnecessary removal in fetch data");
@@ -276,7 +311,8 @@
   {
     ASDN::MutexLocker l(_videoLock);
     [self constructCurrentPlayerItemFromInitData];
-    [_currentPlayerItem addObserver:self forKeyPath:NSStringFromSelector(@selector(status)) options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:NULL];
+    [_currentPlayerItem addObserver:self forKeyPath:kStatus options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew context:ASVideoNodeContext];
+    [_currentPlayerItem addObserver:self forKeyPath:kPlaybackLikelyToKeepUpKey options:NSKeyValueObservingOptionNew context:ASVideoNodeContext];
     
     if (_player) {
       [_player replaceCurrentItemWithPlayerItem:_currentPlayerItem];
@@ -610,8 +646,6 @@
 
 - (void)dealloc
 {
-  [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
-  
   if (_periodicTimeObserver) {
     [_player removeTimeObserver:_periodicTimeObserver];
     _periodicTimeObserver = nil;
@@ -620,7 +654,8 @@
   [self removePlayerItemObservers];
   
   @try {
-    [_currentPlayerItem removeObserver:self forKeyPath:NSStringFromSelector(@selector(status))];
+    [_currentPlayerItem removeObserver:self forKeyPath:kStatus];
+    [_currentPlayerItem removeObserver:self forKeyPath:kPlaybackLikelyToKeepUpKey];
   }
   @catch (NSException * __unused exception) {
 //    NSLog(@"unnecessary removal in dealloc");
