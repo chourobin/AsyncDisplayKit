@@ -81,9 +81,9 @@
       __weak __typeof__(self) weakSelf = self;
       _periodicTimeObserver = [self.player addPeriodicTimeObserverForInterval:CMTimeMake(1, 15) queue:_progressQueue usingBlock:^(CMTime time) {
         __typeof__(self) strongSelf = weakSelf;
-        if ([strongSelf.delegate respondsToSelector:@selector(videoNodeDidUpdateProgressWithCurrentTime:duration:)]) {
+        if ([strongSelf.delegate respondsToSelector:@selector(videoNode:didUpdateProgressWithCurrentTime:duration:)]) {
           CMTime duration = [strongSelf.player.currentItem duration];
-          [strongSelf.delegate videoNodeDidUpdateProgressWithCurrentTime:time duration:duration];
+          [strongSelf.delegate videoNode:strongSelf didUpdateProgressWithCurrentTime:time duration:duration];
         }
       }];
     }
@@ -287,9 +287,9 @@
       __weak __typeof__(self) weakSelf = self;
       _periodicTimeObserver = [self.player addPeriodicTimeObserverForInterval:CMTimeMake(1, 15) queue:_progressQueue usingBlock:^(CMTime time) {
         __typeof__(self) strongSelf = weakSelf;
-        if ([strongSelf.delegate respondsToSelector:@selector(videoNodeDidUpdateProgressWithCurrentTime:duration:)]) {
+        if ([strongSelf.delegate respondsToSelector:@selector(videoNode:didUpdateProgressWithCurrentTime:duration:)]) {
           CMTime duration = [strongSelf.player.currentItem duration];
-          [strongSelf.delegate videoNodeDidUpdateProgressWithCurrentTime:time duration:duration];
+          [strongSelf.delegate videoNode:strongSelf didUpdateProgressWithCurrentTime:time duration:duration];
         }
       }];
     }
@@ -343,9 +343,9 @@
         __weak __typeof__(self) weakSelf = self;
         _periodicTimeObserver = [self.player addPeriodicTimeObserverForInterval:CMTimeMake(1, 15) queue:_progressQueue usingBlock:^(CMTime time) {
           __typeof__(self) strongSelf = weakSelf;
-          if ([strongSelf.delegate respondsToSelector:@selector(videoNodeDidUpdateProgressWithCurrentTime:duration:)]) {
+          if ([strongSelf.delegate respondsToSelector:@selector(videoNode:didUpdateProgressWithCurrentTime:duration:)]) {
             CMTime duration = [strongSelf.player.currentItem duration];
-            [strongSelf.delegate videoNodeDidUpdateProgressWithCurrentTime:time duration:duration];
+            [strongSelf.delegate videoNode:strongSelf didUpdateProgressWithCurrentTime:time duration:duration];
           }
         }];
       }
@@ -544,8 +544,8 @@
 
 - (void)didPlayToEnd:(NSNotification *)notification
 {
-  if ([_delegate respondsToSelector:@selector(videoPlaybackDidFinish:)]) {
-    [_delegate videoPlaybackDidFinish:self];
+  if ([_delegate respondsToSelector:@selector(videoNodePlaybackDidFinish:)]) {
+    [_delegate videoNodePlaybackDidFinish:self];
   }
   [_player seekToTime:CMTimeMakeWithSeconds(0, 1)];
   
