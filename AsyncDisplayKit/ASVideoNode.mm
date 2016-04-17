@@ -500,6 +500,10 @@
     [self addSubnode:_spinner];
     [(UIActivityIndicatorView *)_spinner.view startAnimating];
   }
+  
+  if ([self.delegate respondsToSelector:@selector(videoNodeDidPlay:)]) {
+    [self.delegate videoNodeDidPlay:self];
+  }
 }
 
 - (BOOL)ready
@@ -517,6 +521,10 @@
   [UIView animateWithDuration:0.15 animations:^{
     _playButton.alpha = 1.0;
   }];
+  
+  if ([self.delegate respondsToSelector:@selector(videoNodeDidPause:)]) {
+    [self.delegate videoNodeDidPause:self];
+  }
 }
 
 - (BOOL)isPlaying

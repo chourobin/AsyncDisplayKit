@@ -54,5 +54,7 @@
 - (void)videoPlaybackDidFinish:(ASVideoNode *)videoNode;
 - (void)videoNodeWasTapped:(ASVideoNode *)videoNode;
 - (void)videoNodeDidUpdateProgressWithCurrentTime:(CMTime)time duration:(CMTime)duration;
+- (void)videoNodeDidPause:(ASVideoNode *)videoNode;
+- (void)videoNodeDidPlay:(ASVideoNode *)videoNode;
 @end
 
