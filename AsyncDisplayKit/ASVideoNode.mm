@@ -133,7 +133,7 @@
     [self setPlaceholderImagefromAsset:_asset];
   }
   
-  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willResignActive:) name:UIApplicationWillResignActiveNotification object:nil];
 }
 
 - (void)layout
@@ -523,7 +523,7 @@
   return (_player.rate > 0 && !_player.error);
 }
 
-- (void)didEnterBackground:(NSNotification *)notification
+- (void)willResignActive:(NSNotification *)notification
 {
   [self pause];
 }
@@ -599,7 +599,7 @@
 
 - (void)dealloc
 {
-  [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
+  [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
   
   if (_periodicTimeObserver) {
     [_player removeTimeObserver:_periodicTimeObserver];
