@@ -495,7 +495,8 @@
     _playButton.alpha = 0.0;
   }];
   
-  if (![self ready] && _shouldBePlaying && ASInterfaceStateIncludesVisible(self.interfaceState)) {
+  // spinner fixes
+  if (![self ready] && _shouldBePlaying && (ASInterfaceStateIncludesVisible(self.interfaceState) || !self.interfaceState)) {
     [self addSubnode:_spinner];
     [(UIActivityIndicatorView *)_spinner.view startAnimating];
   }
