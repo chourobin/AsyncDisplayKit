@@ -210,8 +210,10 @@
         [self pause];
         _shouldBePlaying = YES;
       }
-      [(UIActivityIndicatorView *)_spinner.view stopAnimating];
-      [_spinner removeFromSupernode];
+      if (!_shouldObserveInterfaceStateChanges) {
+        [(UIActivityIndicatorView *)_spinner.view stopAnimating];
+        [_spinner removeFromSupernode];
+      }
     }
   } else {
     if (_shouldBePlaying) {
