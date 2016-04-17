@@ -51,10 +51,10 @@
 
 @protocol ASVideoNodeDelegate <NSObject>
 @optional
-- (void)videoPlaybackDidFinish:(ASVideoNode *)videoNode;
+- (void)videoNodePlaybackDidFinish:(ASVideoNode *)videoNode;
 - (void)videoNodeWasTapped:(ASVideoNode *)videoNode;
-- (void)videoNodeDidUpdateProgressWithCurrentTime:(CMTime)time duration:(CMTime)duration;
 - (void)videoNodeDidPause:(ASVideoNode *)videoNode;
 - (void)videoNodeDidPlay:(ASVideoNode *)videoNode;
+- (void)videoNode:(ASVideoNode *)videoNode didUpdateProgressWithCurrentTime:(CMTime)time duration:(CMTime)duration;
 @end
 
