@@ -612,7 +612,7 @@
     [_currentPlayerItem removeObserver:self forKeyPath:NSStringFromSelector(@selector(status))];
   }
   @catch (NSException * __unused exception) {
-    NSLog(@"unnecessary removal in dealloc");
+//    NSLog(@"unnecessary removal in dealloc");
   }
 }
 
