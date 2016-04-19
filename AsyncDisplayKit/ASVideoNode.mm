@@ -110,7 +110,7 @@
   if (_currentPlayerItem) {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemDidPlayToEndTimeNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemFailedToPlayToEndTimeNotification object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemNewErrorLogEntryNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemNewErrorLogEntryNotification object:nil];    
   }
 }
 
@@ -205,12 +205,14 @@
   
   if (!nowVisible) {
     if (wasVisible) {
-      if (_shouldBePlaying) {
+      if (_shouldBePlaying && _shouldObserveInterfaceStateChanges) {
         [self pause];
         _shouldBePlaying = YES;
       }
-      [(UIActivityIndicatorView *)_spinner.view stopAnimating];
-      [_spinner removeFromSupernode];
+      if (_shouldObserveInterfaceStateChanges) {
+        [(UIActivityIndicatorView *)_spinner.view stopAnimating];
+        [_spinner removeFromSupernode];
+      }
     }
   } else {
     if (_shouldBePlaying) {
@@ -294,6 +296,7 @@
     ASDN::MutexLocker l(_videoLock);
     ((AVPlayerLayer *)_playerNode.layer).player = nil;
     _player = nil;
+    _placeholderImageNode.image = nil;
   }
 }
 
@@ -443,6 +446,10 @@
     [self addSubnode:_spinner];
     [(UIActivityIndicatorView *)_spinner.view startAnimating];
   }
+  
+  if ([self.delegate respondsToSelector:@selector(videoNodeDidPlay:)]) {
+    [self.delegate videoNodeDidPlay:self];
+  }
 }
 
 - (BOOL)ready
@@ -460,6 +467,10 @@
   [UIView animateWithDuration:0.15 animations:^{
     _playButton.alpha = 1.0;
   }];
+  
+  if ([self.delegate respondsToSelector:@selector(videoNodeDidPause:)]) {
+    [self.delegate videoNodeDidPause:self];
+  }
 }
 
 - (BOOL)isPlaying
@@ -469,6 +480,19 @@
   return (_player.rate > 0 && !_player.error);
 }
 
+- (void)startLoader
+{
+  [(UIActivityIndicatorView *)_spinner.view startAnimating];
+}
+
+- (void)stopLoader
+{
+  if (_spinner) {
+    [(UIActivityIndicatorView *)_spinner.view stopAnimating];
+    [_spinner removeFromSupernode];
+    _spinner = nil;
+  }
+}
 
 #pragma mark - Playback observers
 
