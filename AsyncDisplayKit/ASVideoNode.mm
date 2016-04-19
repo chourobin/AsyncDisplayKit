@@ -205,11 +205,11 @@
   
   if (!nowVisible) {
     if (wasVisible) {
-      if (_shouldBePlaying && _shouldObserveInterfaceStateChanges) {
+      if (_shouldBePlaying && !_shouldIgnoreInterfaceStateChanges) {
         [self pause];
         _shouldBePlaying = YES;
       }
-      if (_shouldObserveInterfaceStateChanges) {
+      if (!_shouldIgnoreInterfaceStateChanges) {
         [(UIActivityIndicatorView *)_spinner.view stopAnimating];
         [_spinner removeFromSupernode];
       }
